@@ -349,12 +349,18 @@ data "aws_ami" "ecs_optimized_ami" {
 
 
 resource "aws_launch_template" "ecs_launch_template" {
-  image_id             = data.aws_ami.ecs_optimized_ami.id
-  iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.name
-  security_groups      = [aws_security_group.ecs_sg.id]
-  user_data            = data.template_file.user_data.rendered
-  instance_type        = "t2.micro"
-  
+  image_id      = data.aws_ami.ecs_optimized_ami.id
+  user_data     = data.template_file.user_data.rendered
+  instance_type = "t2.micro"
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ecs-instance-profile.name
+  }
+
+  network_interface {
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
@@ -364,9 +370,9 @@ resource "aws_launch_template" "ecs_launch_template" {
   }
 
   metadata_options {
-    http_endpoint = "enabled" 
-    http_tokens = "required"
-    http_put_response_hop_limit = 1
+    http_endpoint                   = "enabled"
+    http_tokens                     = "required"
+    http_put_response_hop_limit     = 1
   }
 }
 
