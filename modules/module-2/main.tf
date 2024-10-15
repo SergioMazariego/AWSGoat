@@ -348,15 +348,19 @@ data "aws_ami" "ecs_optimized_ami" {
 
 
 
-resource "aws_launch_configuration" "ecs_launch_config" {
+resource "aws_launch_template" "ecs_launch_template" {
   image_id             = data.aws_ami.ecs_optimized_ami.id
   iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.name
   security_groups      = [aws_security_group.ecs_sg.id]
   user_data            = data.template_file.user_data.rendered
   instance_type        = "t2.micro"
   
-  root_block_device {
-    volume_type = "gp3"
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size = 20
+      volume_type = "gp3"
+    }
   }
 
   metadata_options {
@@ -373,6 +377,11 @@ resource "aws_autoscaling_group" "ecs_asg" {
   desired_capacity     = 1
   min_size             = 0
   max_size             = 1
+
+  launch_template {
+    id      = aws_launch_template.ecs_launch_template.id
+    version = "$Latest"
+  }
 }
 
 resource "aws_ecs_cluster" "cluster" {
