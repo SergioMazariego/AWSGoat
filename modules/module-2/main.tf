@@ -354,7 +354,17 @@ resource "aws_launch_configuration" "ecs_launch_config" {
   security_groups      = [aws_security_group.ecs_sg.id]
   user_data            = data.template_file.user_data.rendered
   instance_type        = "t2.micro"
+  
+  root_block_device {
+    volume_type = "gp3"
+  }
+
+  metadata_options {
+    http_tokens = "required"
+    http_put_response_hop_limit = 1
+  }
 }
+
 resource "aws_autoscaling_group" "ecs_asg" {
   name                 = "ECS-lab-asg"
   vpc_zone_identifier  = [aws_subnet.lab-subnet-public-1.id]
